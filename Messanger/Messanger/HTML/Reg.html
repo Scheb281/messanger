@@ -1,0 +1,704 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Матрица | Регистрация</title>
+    <style>
+        /* ---------- МАТРИЦА: СТИЛЬНАЯ РЕГИСТРАЦИЯ (ЧИСТЫЙ CSS, БЕЗ JS) ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 40%, #031003, #000200);
+            font-family: 'Courier New', 'Fira Code', 'Source Code Pro', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+            /* ----- МАТРИЧНЫЙ ФОН (статический код + анимированный дождь) ----- */
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: repeating-linear-gradient(0deg, rgba(0, 25, 0, 0.25) 0px, rgba(0, 55, 0, 0.25) 2px, transparent 2px, transparent 10px), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 100" opacity="0.1"><text x="15" y="25" fill="%2333ff55" font-size="9" font-family="monospace">01110010</text><text x="65" y="50" fill="%2322ee44" font-size="8">01100101</text><text x="120" y="75" fill="%2333ff66" font-size="10">01100111</text><text x="35" y="90" fill="%2322ff55" font-size="8">01101001</text><text x="140" y="20" fill="%2333dd55" font-size="9">01110011</text><text x="10" y="70" fill="%2322cc44" font-size="8">01110100</text><text x="95" y="40" fill="%2333ff44" font-size="9">01100101</text></svg>');
+                background-repeat: repeat;
+                background-size: 80px 80px, 140px 120px;
+                pointer-events: none;
+                z-index: 0;
+                animation: matrixScroll 32s linear infinite;
+            }
+
+        @keyframes matrixScroll {
+            0% {
+                background-position: 0 0, 0 0;
+            }
+
+            100% {
+                background-position: 110px 110px, 70px 140px;
+            }
+        }
+
+        /* Эффект падающих символов (чистый CSS, без canvas) — несколько слоёв */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+            .matrix-rain::before,
+            .matrix-rain::after {
+                content: "01 10 11 00 10 01 10 11 00 01 10 01 10 11 00 10 01 10 11 01 00 10 01";
+                position: absolute;
+                font-family: monospace;
+                font-weight: bold;
+                white-space: nowrap;
+                color: rgba(70, 255, 100, 0.18);
+                text-shadow: 0 0 4px #3eff6e;
+                animation: rainFall1 14s linear infinite;
+                letter-spacing: 28px;
+            }
+
+            .matrix-rain::before {
+                top: -20%;
+                left: 8%;
+                font-size: 20px;
+                animation-duration: 12s;
+                animation-delay: 0s;
+            }
+
+            .matrix-rain::after {
+                content: "1100 0110 1010 1001 0011 1101 0110 1011 0010 1110 0101 1001";
+                top: -30%;
+                left: 45%;
+                font-size: 24px;
+                animation-duration: 16s;
+                animation-delay: 3s;
+                letter-spacing: 36px;
+                color: rgba(90, 255, 120, 0.15);
+            }
+
+        @keyframes rainFall1 {
+            0% {
+                transform: translateY(-20%) translateX(0px);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.5;
+            }
+
+            90% {
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: translateY(120vh) translateX(40px);
+                opacity: 0;
+            }
+        }
+
+        /* Дополнительные "колонны" символов через отдельные псевдоэлементы */
+        .rain-columns {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+            .rain-columns div {
+                position: absolute;
+                font-family: monospace;
+                font-weight: bold;
+                white-space: pre;
+                color: rgba(60, 230, 80, 0.2);
+                animation: columnDown linear infinite;
+            }
+
+        /* Колонки с разным положением и скоростью */
+        .c1 {
+            left: 3%;
+            font-size: 18px;
+            animation-duration: 10s;
+            animation-delay: 1s;
+            top: -10%;
+        }
+
+        .c2 {
+            left: 15%;
+            font-size: 22px;
+            animation-duration: 14s;
+            animation-delay: 2s;
+            top: -20%;
+        }
+
+        .c3 {
+            left: 27%;
+            font-size: 20px;
+            animation-duration: 11s;
+            animation-delay: 0.5s;
+            top: -5%;
+        }
+
+        .c4 {
+            left: 40%;
+            font-size: 24px;
+            animation-duration: 13s;
+            animation-delay: 3s;
+            top: -15%;
+        }
+
+        .c5 {
+            left: 52%;
+            font-size: 19px;
+            animation-duration: 9s;
+            animation-delay: 1.8s;
+            top: -30%;
+        }
+
+        .c6 {
+            left: 64%;
+            font-size: 21px;
+            animation-duration: 15s;
+            animation-delay: 0s;
+            top: -8%;
+        }
+
+        .c7 {
+            left: 76%;
+            font-size: 18px;
+            animation-duration: 12s;
+            animation-delay: 2.5s;
+            top: -25%;
+        }
+
+        .c8 {
+            left: 88%;
+            font-size: 23px;
+            animation-duration: 11.5s;
+            animation-delay: 1.2s;
+            top: -12%;
+        }
+
+        .c9 {
+            left: 95%;
+            font-size: 20px;
+            animation-duration: 13.5s;
+            animation-delay: 4s;
+            top: -18%;
+        }
+
+        @keyframes columnDown {
+            0% {
+                transform: translateY(-20%);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.5;
+            }
+
+            90% {
+                opacity: 0.35;
+            }
+
+            100% {
+                transform: translateY(130vh);
+                opacity: 0;
+            }
+        }
+
+        /* Содержимое колонок (бинарный код + символы) */
+        .c1::before {
+            content: "1010 0110 1100 0011 0101";
+            display: block;
+        }
+
+        .c2::before {
+            content: "1101 0010 1011 0111 1001";
+            display: block;
+        }
+
+        .c3::before {
+            content: "0110 1001 1110 0100 1011";
+            display: block;
+        }
+
+        .c4::before {
+            content: "1001 1100 0010 1101 0110";
+            display: block;
+        }
+
+        .c5::before {
+            content: "0101 1010 0110 1001 1100";
+            display: block;
+        }
+
+        .c6::before {
+            content: "1110 0001 1011 0101 0011";
+            display: block;
+        }
+
+        .c7::before {
+            content: "0011 1100 1001 0110 1010";
+            display: block;
+        }
+
+        .c8::before {
+            content: "0111 1000 0101 1011 1100";
+            display: block;
+        }
+
+        .c9::before {
+            content: "1011 0100 1110 0001 0111";
+            display: block;
+        }
+
+        /* ---------- ОСНОВНОЙ КОНТЕЙНЕР РЕГИСТРАЦИИ (СТИЛЬ ТЕРМИНАЛА) ---------- */
+        .reg-container {
+            position: relative;
+            z-index: 20;
+            background: rgba(0, 8, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid #2eff7a;
+            border-radius: 48px;
+            padding: 2.5rem 2rem;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 35px rgba(0, 255, 65, 0.45), inset 0 0 15px rgba(80, 255, 100, 0.25);
+            transition: all 0.3s ease;
+            animation: containerPulse 3s infinite alternate;
+        }
+
+        @keyframes containerPulse {
+            0% {
+                border-color: #2eff7a;
+                box-shadow: 0 0 25px rgba(0, 255, 100, 0.3);
+            }
+
+            100% {
+                border-color: #bbffaa;
+                box-shadow: 0 0 50px rgba(70, 255, 110, 0.7), inset 0 0 12px #6eff9e;
+            }
+        }
+
+        /* Заголовок с глитч-эффектом */
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #b3ffb3;
+            text-shadow: 0 0 10px #00ff66, 0 0 4px #3eff6e;
+            letter-spacing: 6px;
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            animation: titleGlow 1.8s infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% {
+                text-shadow: 0 0 4px #00ff44, 0 0 2px #2eff6e;
+            }
+
+            100% {
+                text-shadow: 0 0 16px #3eff8e, 0 0 6px #8effaa;
+            }
+        }
+
+        /* Глитч-эффект для заголовка (псевдоэлементы) */
+        h1::before,
+        h1::after {
+            content: "РЕГИСТРАЦИЯ";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        h1::before {
+            color: #ff44aa;
+            z-index: -1;
+            text-shadow: 2px 0 #ff2266;
+            transform: translate(-1.5px, 0);
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+            animation: glitch1 2.3s infinite steps(1);
+        }
+
+        h1::after {
+            color: #44ffaa;
+            z-index: -2;
+            text-shadow: -2px 0 #22ff88;
+            transform: translate(1.5px, 0);
+            clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+            animation: glitch2 2.7s infinite steps(1);
+        }
+
+        @keyframes glitch1 {
+            0%, 100% {
+                transform: translate(-1.2px, 0);
+                opacity: 0.4;
+            }
+
+            25% {
+                transform: translate(1px, 0.4px);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: translate(-1.8px, -0.3px);
+                opacity: 0.3;
+            }
+
+            75% {
+                transform: translate(1.5px, 0.2px);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes glitch2 {
+            0%, 100% {
+                transform: translate(1.2px, 0);
+                opacity: 0.5;
+            }
+
+            30% {
+                transform: translate(-1px, -0.4px);
+                opacity: 0.7;
+            }
+
+            60% {
+                transform: translate(1.8px, 0.3px);
+                opacity: 0.4;
+            }
+
+            90% {
+                transform: translate(-0.8px, -0.2px);
+                opacity: 0.8;
+            }
+        }
+
+        /* Стили полей ввода (логин / пароль) */
+        .input-field {
+            width: 100%;
+            background: rgba(0, 15, 0, 0.85);
+            border: 1.5px solid #3eff7a;
+            border-radius: 18px;
+            padding: 14px 20px;
+            margin: 14px 0;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            color: #caffca;
+            outline: none;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 0 8px rgba(0, 30, 0, 0.7), 0 0 6px rgba(70, 255, 70, 0.2);
+            letter-spacing: 1.2px;
+        }
+
+            .input-field:focus {
+                border-color: #ccffaa;
+                box-shadow: 0 0 14px #2eff7e, inset 0 0 6px #3eff8e;
+                background: rgba(0, 22, 0, 0.95);
+                color: #f0fff0;
+                transform: scale(1.01);
+            }
+
+            .input-field::placeholder {
+                color: #5f9e6f;
+                font-style: italic;
+                font-weight: normal;
+                letter-spacing: normal;
+                opacity: 0.7;
+                font-size: 0.9rem;
+            }
+
+        /* Кнопка создания аккаунта (главная) */
+        .btn-primary {
+            background: rgba(20, 70, 20, 0.6);
+            border: 2px solid #2eff7a;
+            color: #e0ffe0;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 12px 28px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.25s;
+            backdrop-filter: blur(4px);
+            width: 100%;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(60, 255, 80, 0.5);
+            margin: 16px 0 8px 0;
+        }
+
+            .btn-primary:hover {
+                background: #2eff5e33;
+                border-color: #ccffcc;
+                color: #ffffff;
+                text-shadow: 0 0 8px #0f0;
+                box-shadow: 0 0 28px #3eff7e;
+                transform: scale(1.02);
+                letter-spacing: 5px;
+            }
+
+            .btn-primary:active {
+                transform: scale(0.98);
+            }
+
+        /* Блок с кнопкой "Назад" — отдельный стиль (матричный минимализм) */
+        .back-section {
+            margin-top: 1.8rem;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-back {
+            background: rgba(0, 12, 0, 0.65);
+            border: 1.5px solid #3a9b5e;
+            color: #9bc0a3;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 0.95rem;
+            padding: 8px 28px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(6px);
+            width: auto;
+            min-width: 150px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            box-shadow: 0 0 8px rgba(50, 180, 70, 0.3);
+            display: inline-block;
+        }
+
+            .btn-back:hover {
+                background: #1a4d2a44;
+                border-color: #6bff9e;
+                color: #e0ffe0;
+                text-shadow: 0 0 6px #5eff8e;
+                box-shadow: 0 0 20px #3eff7e;
+                transform: scale(1.02);
+                letter-spacing: 3.5px;
+            }
+
+            .btn-back:active {
+                transform: scale(0.97);
+            }
+
+        /* Декоративный разделитель (матричная линия) */
+        .separator {
+            width: 60%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #2eff7a, #aaffaa, #2eff7a, transparent);
+            margin: 20px auto 10px auto;
+            opacity: 0.5;
+        }
+
+        /* Эффект сканирующей линии (как в мониторе) */
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #2eff7a, #aaffaa, #2eff7a, transparent);
+            box-shadow: 0 0 20px #3eff7e;
+            z-index: 30;
+            animation: scanMove 7s ease-in-out infinite;
+            pointer-events: none;
+            opacity: 0.65;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: -5%;
+                opacity: 0.3;
+            }
+
+            50% {
+                top: 98%;
+                opacity: 1;
+            }
+
+            100% {
+                top: -5%;
+                opacity: 0.3;
+            }
+        }
+
+        /* Статус-бар внизу (матричный) */
+        .status-bar {
+            position: fixed;
+            bottom: 18px;
+            right: 20px;
+            font-size: 11px;
+            background: rgba(0, 15, 0, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-family: monospace;
+            color: #70ff90;
+            border-right: 3px solid #2eff7a;
+            letter-spacing: 1.2px;
+            z-index: 25;
+            animation: softBlink 2.2s infinite alternate;
+        }
+
+        @keyframes softBlink {
+            0% {
+                opacity: 0.5;
+                text-shadow: none;
+                border-right-color: #3eff6e;
+            }
+
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 3px #2eff5e;
+                border-right-color: #aaffaa;
+            }
+        }
+
+        /* Эффект зернистости / CRT */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0, 255, 0, 0.02) 0px, rgba(0, 0, 0, 0.03) 1px, transparent 2px, transparent 7px);
+            pointer-events: none;
+            z-index: 35;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 580px) {
+            .reg-container {
+                padding: 1.8rem 1.2rem;
+                max-width: 92%;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                letter-spacing: 3px;
+            }
+
+            .input-field {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .btn-primary {
+                font-size: 1rem;
+                padding: 10px 16px;
+                letter-spacing: 2px;
+            }
+
+            .btn-back {
+                font-size: 0.8rem;
+                padding: 6px 18px;
+                min-width: 120px;
+                letter-spacing: 1.8px;
+            }
+
+            .status-bar {
+                font-size: 8px;
+                bottom: 10px;
+                right: 12px;
+            }
+
+            .c1, .c2, .c3, .c4, .c5, .c6, .c7, .c8, .c9 {
+                font-size: 14px !important;
+            }
+        }
+
+        /* Доп. свечение для форм */
+        form {
+            width: 100%;
+        }
+
+        /* курсор в стиле терминала */
+        body {
+            cursor: default;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* небольшая анимация для контейнера при наведении */
+        .reg-container:hover {
+            transition: 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Матричный дождь (чистый CSS слои) -->
+    <div class="matrix-rain"></div>
+    <div class="rain-columns">
+        <div class="c1"></div>
+        <div class="c2"></div>
+        <div class="c3"></div>
+        <div class="c4"></div>
+        <div class="c5"></div>
+        <div class="c6"></div>
+        <div class="c7"></div>
+        <div class="c8"></div>
+        <div class="c9"></div>
+    </div>
+
+    <div class="scan-line"></div>
+    <div class="crt-overlay"></div>
+
+    <div class="status-bar">
+        [ СИСТЕМА МАТРИЦЫ ] :: РЕГИСТРАЦИЯ НОВОГО ПОЛЬЗОВАТЕЛЯ
+    </div>
+
+    <div class="reg-container">
+        <h1>РЕГИСТРАЦИЯ</h1>
+
+        <form method="post" action="/reg">
+            <input type="text" class="input-field" name="login" placeholder="Логин" autocomplete="username" required>
+            <input type="password" class="input-field" name="password" placeholder="Пароль (матричный ключ)" autocomplete="new-password" required>
+            <input type="text" class="input-field" name="nik" placeholder="Ник" autocomplete="username" required>
+            <button type="submit" class="btn-primary">⚡ СОЗДАТЬ АККАУНТ ⚡</button>
+        </form>
+
+        <div class="separator"></div>
+
+        <div class="back-section">
+            <form method="get" action="/">
+                <button type="submit" class="btn-back">⌂ НАЗАД ⌂</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
