@@ -3,12 +3,15 @@ using Messanger.Tabels;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Hosting.Builder;
 using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.AspNetCore.Mvc;
+using System.Runtime.InteropServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +26,13 @@ builder.Services.AddDbContext<Db>(options =>
         databaseConnectionString,
         npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
 
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
+app.MapRazorPages();
+
+User? User = null;
+int Num = 5;
 
 using (var scope = app.Services.CreateScope())
 {
@@ -35,11 +43,25 @@ using (var scope = app.Services.CreateScope())
 
 }
 
-app.MapGet("/", () =>
+app.MapGet("/", async (HttpContext context, Db db) =>
 {
+    if (context.Request.Cookies.TryGetValue("Session_id", out string value))
+    {
+        string[] values = value.Split(':');
+        var us = await db.Users.FirstOrDefaultAsync(u => u.Login == values[0] && u.Password == values[1]);
+        SetUser(us);
+        context.Response.Redirect("/chats");
+    }
 
     string html = File.ReadAllText($"HTML\\MainMenu.html");
     return Results.Content(html, "text/html; charset=utf-8");
+});
+
+app.MapPost("/", async (HttpContext context, Db db) => 
+{
+    DeleteCookie(context);
+    context.Response.Redirect("/");
+
 });
 
 app.MapGet("/enter", () => 
@@ -63,6 +85,7 @@ app.MapPost("/enter", async (HttpContext context, Db db) =>
         return Results.Content(html, "text/html; charset=utf-8");
     }
 
+    SetUser(user);
     CreateCookie(login, password, context);
 
     html = File.ReadAllText($"HTML\\EnterS.html");
@@ -93,13 +116,28 @@ app.MapPost("/reg", async (HttpContext context, Db db) =>
 
     db.SaveChanges();
 
+    SetUser(user);
     string html = File.ReadAllText($"HTML\\RegS.html");
     return Results.Content(html, "text/html; charset=utf-8");
 });
 
 app.MapGet("/chats", () =>
 {
-    string html = File.ReadAllText($"HTML\\Chats.html");
+    string line;
+    string html = """<html></html>""";
+    using (StreamReader sr = new StreamReader($"HTML\\Number.html"))
+    {
+        while (sr.ReadLine() != null)
+        {
+            line = sr.ReadLine();
+            if (line == "@Num")
+            {
+                line = $"""<h2>{User.Nik}</h2>""";
+            }
+            html += line;
+        }
+    }
+
     return Results.Content(html, "text/html; charset=utf-8");
 });
 
@@ -132,17 +170,18 @@ static async Task CreateTables(Db db)
 
 static void CreateCookie(string login, string password, HttpContext context)
 {
-    context.Response.Cookies.Append("Log", $"{GetHash(login)}", new CookieOptions
+    context.Response.Cookies.Append("Session_id", $"{login}:{password}", new CookieOptions
     {
         Expires = DateTimeOffset.Now.AddDays(30),
-        Secure = true
-    });
-    context.Response.Cookies.Append("Pass", $"{password}", new CookieOptions
-    {
-        Expires = DateTimeOffset.Now.AddDays(30),
-        Secure = true
+        Secure = true,
+        HttpOnly = true
     });
 }
+static void DeleteCookie(HttpContext context)
+{
+    context.Response.Cookies.Delete("Session_id");
+}
+
 static string CreateConnectionString(string ConnectionString)
 {
     if (!ConnectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) &&
@@ -202,4 +241,26 @@ static string CreateConnectionString(string ConnectionString)
 
     return connectionStringBuilder.ConnectionString;
 }
+void SetUser(User us)
+{
+    User = us;
+}
+User RetUser()
+{
+    return User;
+}
+
+void DelUser()
+{
+    User = null;
+}
+
+
+//static void CreateChat(string UserNik, )
+
+public static class asd
+{
+    public static User user { get; set; } = new User();
+}
+
 
