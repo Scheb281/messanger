@@ -105,6 +105,15 @@ app.MapPost("/reg", async (HttpContext context, Db db) =>
     string password = form["password"];
     string nik = form["nik"];
 
+    string html = File.ReadAllText($"HTML\\RegS.html");
+
+    var us = await db.Users.FirstOrDefaultAsync(u => u.Login == login || u.Nik == nik);
+    if (us is not null || password.Length < 6)
+    {
+        html = File.ReadAllText($"HTML\\RegError.html");
+        return Results.Content(html, "text/html; charset=utf-8");
+    }
+
     var user = new User
     {
         Login = login,
@@ -117,26 +126,96 @@ app.MapPost("/reg", async (HttpContext context, Db db) =>
     db.SaveChanges();
 
     SetUser(user);
-    string html = File.ReadAllText($"HTML\\RegS.html");
+    CreateCookie(user.Login, user.Password, context);
     return Results.Content(html, "text/html; charset=utf-8");
 });
 
 app.MapGet("/chats", () =>
 {
+    bool Check = true;
     string line;
-    string html = """<html></html>""";
+    string html = """<html>""";
     using (StreamReader sr = new StreamReader($"HTML\\Number.html"))
     {
-        while (sr.ReadLine() != null)
+        while ((line = sr.ReadLine()) != null)
         {
-            line = sr.ReadLine();
             if (line == "@Num")
             {
                 line = $"""<h2>{User.Nik}</h2>""";
             }
-            html += line;
+            if (line == "<h1>Контакты:</h1>")
+            {
+                if (User.Chats != string.Empty)
+                {
+                    html += line;
+                    string[] lines = User.Chats.Split('\n');
+                    foreach (string l in lines)
+                    {
+                        if (l != "")
+                        {
+                            if (l[0] == '!')
+                            {
+                                line = $"""<h2>{l.Remove(0, 1)}</h2>""";
+                                html += line;
+                                Check = false;
+                            }
+                        }
+                    }
+                }
+            }
+            if (Check)
+            {
+                html += line;
+            }
+            Check = true;
         }
     }
+    html += """</html>""";
+
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+
+app.MapGet("/AddContact", () =>
+{
+    string html = File.ReadAllText("HTML\\AddContact.html");
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+app.MapPost("/AddContact", async (HttpContext context, Db db) =>
+{
+    string html = File.ReadAllText("HTML\\AddS.html");
+
+    var form = await context.Request.ReadFormAsync();
+
+    string nik = form["nik"];
+
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Nik == nik);
+
+    if (user is null)
+    {
+        html = File.ReadAllText("HTML\\AddError.html");
+        return Results.Content(html, "text/html; charset=utf-8");
+    }
+
+    string[] lines = User.Chats.Split('\n');
+    foreach (string l in lines)
+    {
+        if (l != "")
+        {
+            if (l[0] == '!')
+            {
+                if (l.Remove(0,1) == nik)
+                {
+                    html = File.ReadAllText("HTML\\AddError2.html");
+                    return Results.Content(html, "text/html; charset=utf-8");
+                }
+            }
+        }
+    }
+
+    user = await db.Users.FirstOrDefaultAsync(u => u.Login == User.Login && u.Password == User.Password);
+    user.Chats += $"!{nik}\n";
+    SetUser(user);
+    await db.SaveChangesAsync();
 
     return Results.Content(html, "text/html; charset=utf-8");
 });
