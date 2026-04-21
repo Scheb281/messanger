@@ -32,7 +32,6 @@ var app = builder.Build();
 app.MapRazorPages();
 
 User? User = null;
-int Num = 5;
 
 using (var scope = app.Services.CreateScope())
 {
@@ -132,18 +131,23 @@ app.MapPost("/reg", async (HttpContext context, Db db) =>
 
 app.MapGet("/chats", () =>
 {
+    int i = 0;
     bool Check = true;
     string line;
     string html = """<html>""";
-    using (StreamReader sr = new StreamReader($"HTML\\Number.html"))
+    using (StreamReader sr = new StreamReader($"HTML\\Chats.html"))
     {
         while ((line = sr.ReadLine()) != null)
         {
-            if (line == "@Num")
+            if (i == 278)
             {
-                line = $"""<h2>{User.Nik}</h2>""";
+                i = 0;
             }
-            if (line == "<h1>Контакты:</h1>")
+            if (line.Trim() == "<div class=\"username-glow cursor-blink\">UserName</div>")
+            {
+                line = $"""<div class="username-glow cursor-blink">{User.Nik}</div>""";
+            }
+            if (line.Trim() == "<div class=\"section-title\">📡 КОНТАКТЫ:</div>")
             {
                 if (User.Chats != string.Empty)
                 {
@@ -155,7 +159,17 @@ app.MapGet("/chats", () =>
                         {
                             if (l[0] == '!')
                             {
-                                line = $"""<h2>{l.Remove(0, 1)}</h2>""";
+                                line = $"""
+                                <h2 class="contact-name">{l.Remove(0, 1)}</h2>
+                                <div class="contact-actions">
+                                    <form method="get" action="/AddContact">
+                                        <button class="matrix-btn" type="submit">💬 Написать</button>
+                                    </form>
+                                    <form method="post" action="/DelContact/{l.Remove(0, 1)}">
+                                        <button class="matrix-btn" type="submit">🗑 Удалить</button>
+                                    </form>
+                                </div>
+                                """;
                                 html += line;
                                 Check = false;
                             }
@@ -166,6 +180,7 @@ app.MapGet("/chats", () =>
             if (Check)
             {
                 html += line;
+                i++;
             }
             Check = true;
         }
@@ -174,6 +189,46 @@ app.MapGet("/chats", () =>
 
     return Results.Content(html, "text/html; charset=utf-8");
 });
+
+app.MapPost("/DelContact/{name}", async (string name, HttpContext context, Db db) =>
+{
+    bool del = false;
+    string NewChat = string.Empty;
+    string[] lines = User.Chats.Split('\n');
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Login == User.Login && u.Password == User.Password);
+    foreach (string l in lines)
+    {
+        if (l != "")
+        {
+            if (del && l[0] == '!')
+            {
+                del = false;
+            }
+            if (!del)
+            {
+                if (l[0] == '!')
+                {
+                    if (l.Remove(0, 1) == name)
+                    {
+                        del = true;
+                    }
+                    else
+                    {
+                        NewChat += l + '\n';
+                    }
+                }
+                else
+                {
+                    NewChat += l;
+                }
+            }
+        }
+    }
+    user.Chats = NewChat;
+    SetUser(user);
+    await db.SaveChangesAsync();
+    context.Response.Redirect("/chats");
+}); 
 
 app.MapGet("/AddContact", () =>
 {
