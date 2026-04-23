@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Вход в Сеть | Матрица</title>
+    <style>
+        /* ----- Стиль Матрицы: тёмный фон, зелёный неон, глитч-эффекты ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* небольшая "кибер" деталь, но текст можно выделять */
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #0a1f0a, #030603);
+            font-family: 'Courier New', 'Fira Code', 'Source Code Pro', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+            /* Анимированный "дождь" из символов (Матричный фон) */
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.08"><text x="10" y="20" fill="%2333ff33" font-size="8">01001101</text><text x="45" y="40" fill="%2333dd33" font-size="7">01100001</text><text x="70" y="60" fill="%2322ee22" font-size="9">01110100</text><text x="25" y="80" fill="%2333ff66" font-size="8">01110010</text><text x="85" y="30" fill="%2322ff22" font-size="7">01101001</text><text x="15" y="95" fill="%2333cc33" font-size="9">01111000</text></svg>');
+                background-repeat: repeat;
+                background-size: 60px 60px;
+                pointer-events: none;
+                z-index: 0;
+                opacity: 0.25;
+                animation: matrixShift 40s linear infinite;
+            }
+
+        @keyframes matrixShift {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 150px 150px;
+            }
+        }
+
+        /* Падающие звёздочки / символы (доп. слой) */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            font-family: monospace;
+            font-size: 18px;
+            color: #0f0;
+            opacity: 0.2;
+            overflow: hidden;
+        }
+
+        /* Основной контейнер карточки */
+        .matrix-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(0, 8, 0, 0.75);
+            backdrop-filter: blur(6px);
+            border: 1.5px solid #2eff7a;
+            border-radius: 32px;
+            padding: 2rem 2.2rem;
+            width: 90%;
+            max-width: 460px;
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.3), inset 0 0 10px rgba(80, 255, 100, 0.2);
+            transition: 0.3s ease;
+            animation: flickerGlow 3s infinite alternate;
+        }
+
+        @keyframes flickerGlow {
+            0% {
+                box-shadow: 0 0 15px rgba(0, 255, 100, 0.2), inset 0 0 5px rgba(100, 255, 100, 0.1);
+                border-color: #2eff7a;
+            }
+
+            100% {
+                box-shadow: 0 0 32px rgba(60, 255, 80, 0.6), inset 0 0 12px rgba(80, 255, 70, 0.3);
+                border-color: #aaffaa;
+            }
+        }
+
+        /* Заголовок с эффектом "глитч" */
+        h1 {
+            text-align: center;
+            font-size: 1.9rem;
+            letter-spacing: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #8eff8e;
+            text-shadow: 0 0 8px #00cc44, 0 0 2px #3eff6e;
+            margin-bottom: 1.8rem;
+            word-break: keep-all;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+            h1::before,
+            h1::after {
+                content: "ВОЙДИТЕ, ЧТОБЫ НАЧАТЬ ОБЩЕНИЕ";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                opacity: 0.6;
+                pointer-events: none;
+            }
+
+            h1::before {
+                color: #0f0;
+                z-index: -1;
+                text-shadow: 2px 0 red;
+                transform: translate(-1px, 0);
+                clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+                animation: glitchAnim 2.5s infinite steps(1);
+            }
+
+            h1::after {
+                color: #5aff5a;
+                z-index: -2;
+                text-shadow: -2px 0 blue;
+                transform: translate(1px, 0);
+                clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+                animation: glitchAnim 2.2s infinite reverse;
+            }
+
+        @keyframes glitchAnim {
+            0%, 100% {
+                opacity: 0.3;
+                transform: translate(0,0);
+            }
+
+            20% {
+                opacity: 0.7;
+                transform: translate(-1.2px, 0.4px);
+            }
+
+            40% {
+                opacity: 0.2;
+                transform: translate(1.5px, -0.3px);
+            }
+
+            60% {
+                opacity: 0.8;
+                transform: translate(-0.8px, 0.2px);
+            }
+
+            80% {
+                opacity: 0.4;
+                transform: translate(0.9px, -0.1px);
+            }
+        }
+
+        /* Стили полей ввода — матричный техно-стиль */
+        .input-field {
+            width: 100%;
+            background: rgba(0, 15, 0, 0.8);
+            border: 1.5px solid #3eff7a;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 12px 0;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            color: #b3ffb3;
+            outline: none;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 0 8px rgba(0, 30, 0, 0.8), 0 0 5px rgba(70, 255, 70, 0.2);
+            letter-spacing: 1px;
+        }
+
+            .input-field:focus {
+                border-color: #aaffaa;
+                box-shadow: 0 0 12px #1eff6e, inset 0 0 5px #1eff6e;
+                background: rgba(0, 20, 0, 0.9);
+                color: #eeffee;
+                transform: scale(1.01);
+            }
+
+            .input-field::placeholder {
+                color: #5f9e6f;
+                font-style: italic;
+                font-weight: normal;
+                letter-spacing: normal;
+                opacity: 0.7;
+            }
+
+        /* Кнопки в стиле хакер-терминал (базовый стиль) */
+        .matrix-btn {
+            background: transparent;
+            border: 1.5px solid #27e65c;
+            color: #bcffbc;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 10px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            backdrop-filter: blur(4px);
+            width: 100%;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 0 6px rgba(0, 255, 0, 0.3);
+            margin-top: 10px;
+        }
+
+            .matrix-btn:hover {
+                background: #2eff5e22;
+                border-color: #aaffaa;
+                color: #e0ffe0;
+                text-shadow: 0 0 5px #0f0;
+                box-shadow: 0 0 18px #2eff6e;
+                transform: scale(1.02);
+                transition: 0.2s;
+            }
+
+            .matrix-btn:active {
+                transform: scale(0.98);
+            }
+
+        /* дополнительная кнопка входа — акцент */
+        .btn-login {
+            background: rgba(30, 80, 30, 0.5);
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+        }
+
+        /* разделитель и стиль для блока "Нет аккаунта?" */
+        .register-block {
+            margin-top: 1.8rem;
+            text-align: center;
+            border-top: 1px dashed #37ff7e;
+            padding-top: 1.2rem;
+        }
+
+        h3 {
+            font-size: 0.95rem;
+            color: #a6f0b2;
+            letter-spacing: 2px;
+            font-weight: normal;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            text-shadow: 0 0 3px #0f0;
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: #46b86b;
+            color: #b9ffc9;
+            margin-top: 0;
+            font-size: 0.95rem;
+            width: auto;
+            padding: 8px 20px;
+            display: inline-block;
+            width: 80%;
+        }
+
+        /* ========== НОВЫЙ СТИЛЬ ДЛЯ КНОПКИ "НАЗАД" В СТИЛЕ МАТРИЦЫ ========== */
+        .btn-back {
+            background: rgba(0, 8, 0, 0.65);
+            border: 1.5px solid #3a9b5e;
+            color: #9bc0a3;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            padding: 8px 18px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(6px);
+            width: auto;
+            min-width: 130px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            box-shadow: 0 0 6px rgba(50, 180, 70, 0.3);
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+            .btn-back:hover {
+                background: #1a4d2a33;
+                border-color: #6bff9e;
+                color: #d4ffd4;
+                text-shadow: 0 0 5px #5eff8e;
+                box-shadow: 0 0 18px #3eff7e;
+                transform: scale(1.02);
+                letter-spacing: 3px;
+            }
+
+            .btn-back:active {
+                transform: scale(0.96);
+            }
+
+        /* Обертка для кнопки "Назад" — центрирование и доп. отступ */
+        .back-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.2rem;
+            position: relative;
+        }
+
+            /* Декоративная линия-разделитель перед кнопкой назад (опционально) */
+            .back-wrapper::before {
+                content: "◈";
+                position: absolute;
+                top: -18px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 12px;
+                color: #3a9b5e;
+                opacity: 0.6;
+                letter-spacing: 6px;
+            }
+
+        /* для формы дополнительный отступ */
+        form {
+            width: 100%;
+        }
+
+        /* стиль для имени пользователя/пароля (подсказка для мыслей) */
+        .input-icon {
+            position: relative;
+        }
+
+        /* кастомный курсор и эффект при фокусе на всю карточку */
+        .matrix-container:hover {
+            transition: 0.25s;
+        }
+
+        /* добавим анимированный "бегущий" символ внизу страницы */
+        .crt-lines {
+            position: fixed;
+            bottom: 12px;
+            left: 20px;
+            font-size: 12px;
+            color: #3baa4c;
+            font-family: monospace;
+            z-index: 15;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(2px);
+            letter-spacing: 1px;
+            pointer-events: none;
+            animation: pulseText 2s infinite;
+        }
+
+        @keyframes pulseText {
+            0% {
+                opacity: 0.4;
+                text-shadow: none;
+            }
+
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 3px #0f0;
+            }
+        }
+
+        /* Сканер/эффект монитора */
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 255, 0, 0.25);
+            box-shadow: 0 0 12px #2eff4e;
+            z-index: 20;
+            animation: scanMove 6s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: -2%;
+                opacity: 0.3;
+            }
+
+            50% {
+                top: 98%;
+                opacity: 0.8;
+            }
+
+            100% {
+                top: -2%;
+                opacity: 0.3;
+            }
+        }
+
+        /* отзывчивость */
+        @media (max-width: 520px) {
+            .matrix-container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+                letter-spacing: 2px;
+            }
+
+            .input-field {
+                padding: 10px 14px;
+                font-size: 0.9rem;
+            }
+
+            .matrix-btn {
+                font-size: 0.9rem;
+            }
+
+            .btn-back {
+                font-size: 0.75rem;
+                padding: 6px 14px;
+                min-width: 110px;
+                letter-spacing: 1.5px;
+            }
+
+                .btn-back:hover {
+                    letter-spacing: 2px;
+                }
+        }
+
+        /* дополнительный эффект для ссылок или кнопок */
+        button {
+            background: none;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="matrix-rain" id="matrixRain"></div>
+    <div class="scan-line"></div>
+    <div class="crt-lines">[ root@matrix ~ ]$ _ ВХОД В СЕТЬ</div>
+
+    <div class="matrix-container">
+        <h1>ВОЙДИТЕ,<br>ЧТОБЫ НАЧАТЬ ОБЩЕНИЕ</h1>
+
+        <!-- Форма входа (метод POST, action="/enter") -->
+        <form method="POST" action="/enter" id="loginForm">
+            <!-- поле Логин -->
+            <input type="text" class="input-field" name="login" id="login" placeholder="Логин" autocomplete="username" required>
+            <!-- поле Пароль (тип password для скрытого ввода) -->
+            <input type="password" class="input-field" name="password" id="password" placeholder="Пароль (матричный ключ)" autocomplete="current-password" required>
+            <button type="submit" class="matrix-btn btn-login">⟳ ВОЙТИ ⟳</button>
+        </form>
+
+        <div class="register-block">
+            <h3>❯ НЕТ АККАУНТА? ❮</h3>
+            <!-- Форма перехода на регистрацию (GET /reg) -->
+            <form method="GET" action="/reg">
+                <button type="submit" class="matrix-btn btn-secondary">🖧 СОЗДАТЬ АККАУНТ 🖧</button>
+            </form>
+        </div>
+
+        <!-- Кнопка "Назад" с отдельным матричным стилем -->
+        <div class="back-wrapper">
+            <form method="GET" action="/">
+                <button type="submit" class="btn-back">⌘ НАЗАД ⌘</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Небольшой эффект динамической смены placeholder (чисто декоративно, без скриптов) -->
+</body>
+</html>

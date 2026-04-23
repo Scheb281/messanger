@@ -1,0 +1,372 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Ошибка Сети | Аккаунт не найден</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        /* ---------- МАТРИЦА: ТРЕВОЖНАЯ ОШИБКА, НО СТИЛЬНАЯ ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 40%, #021102, #000300);
+            font-family: 'Courier New', 'Fira Code', 'Source Code Pro', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* --- Матричный фоновый слой (код дождя) --- */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg, rgba(0, 30, 0, 0.2) 0px, rgba(0, 60, 0, 0.2) 2px, transparent 2px, transparent 8px);
+        }
+
+        /* падающие символы canvas (продвинутый матричный дождь) */
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 0;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        /* Контейнер ошибки с «красновато-зеленым» акцентом (сбой в матрице) */
+        .error-container {
+            position: relative;
+            z-index: 20;
+            background: rgba(0, 6, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid #ff3366;
+            border-radius: 40px;
+            padding: 2.5rem 2rem;
+            width: 90%;
+            max-width: 520px;
+            text-align: center;
+            box-shadow: 0 0 35px rgba(255, 50, 100, 0.4), inset 0 0 15px rgba(255, 70, 120, 0.2);
+            transition: all 0.3s ease;
+            animation: glitchBorder 2.2s infinite alternate;
+        }
+
+        @keyframes glitchBorder {
+            0% {
+                border-color: #ff3366;
+                box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+            }
+
+            100% {
+                border-color: #ff6699;
+                box-shadow: 0 0 45px rgba(255, 80, 120, 0.8), inset 0 0 8px #ff7799;
+            }
+        }
+
+        /* Иконка / знак ошибки в матричном стиле */
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            color: #ff5588;
+            text-shadow: 0 0 12px #ff2266, 0 0 25px #ff1144;
+            letter-spacing: 8px;
+            animation: pulseRed 1.2s infinite alternate;
+        }
+
+        @keyframes pulseRed {
+            0% {
+                text-shadow: 0 0 2px #ff3366, 0 0 6px #ff1144;
+                opacity: 0.8;
+            }
+
+            100% {
+                text-shadow: 0 0 18px #ff6688, 0 0 30px #ff3366;
+                opacity: 1;
+            }
+        }
+
+        /* Главный заголовок с глитч-эффектом */
+        h1 {
+            font-size: 2rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: #ff6688;
+            background: linear-gradient(135deg, #ff4466, #ff88aa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 8px #ff2266;
+            letter-spacing: 3px;
+            margin: 0.5rem 0 1rem 0;
+            position: relative;
+            display: inline-block;
+            animation: glitchText 2s infinite;
+        }
+
+        @keyframes glitchText {
+            0%, 100% {
+                transform: skew(0deg, 0deg);
+                opacity: 1;
+                text-shadow: 2px 0 red, -2px 0 cyan;
+            }
+
+            5% {
+                transform: skew(2deg, 0.5deg);
+                text-shadow: -3px 0 #ff3366, 3px 0 #33ff66;
+            }
+
+            10% {
+                transform: skew(-1deg, -0.3deg);
+                text-shadow: 2px 0 #ff44aa, -2px 0 #44ffaa;
+            }
+
+            15% {
+                transform: skew(0deg, 0deg);
+            }
+        }
+
+        /* подзаголовок / пояснение */
+        .error-message {
+            font-size: 1.15rem;
+            color: #bcffbc;
+            background: rgba(30, 0, 0, 0.5);
+            border-left: 4px solid #ff5577;
+            padding: 12px 18px;
+            margin: 20px 0;
+            font-family: monospace;
+            text-align: left;
+            backdrop-filter: blur(4px);
+            letter-spacing: 1px;
+            word-break: break-word;
+            border-radius: 12px;
+        }
+
+            .error-message span {
+                color: #ff99bb;
+                font-weight: bold;
+            }
+
+        /* Кнопки в стиле матрицы (но с оттенком тревоги) */
+        .matrix-btn {
+            background: transparent;
+            border: 1.8px solid #77ff99;
+            color: #bbffcc;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 12px 18px;
+            margin: 12px 8px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            backdrop-filter: blur(4px);
+            width: auto;
+            min-width: 200px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 0 8px rgba(80, 255, 80, 0.3);
+        }
+
+            .matrix-btn:hover {
+                background: #5aff5a22;
+                border-color: #aaffaa;
+                color: #f0fff0;
+                text-shadow: 0 0 6px #3eff6e;
+                box-shadow: 0 0 20px #4eff6e;
+                transform: scale(1.02);
+            }
+
+            .matrix-btn:active {
+                transform: scale(0.97);
+            }
+
+        /* Кнопка "Назад в главное меню" с зеленым свечением */
+        .btn-home {
+            border-color: #2eff7a;
+            background: rgba(0, 30, 0, 0.6);
+        }
+
+        /* Кнопка регистрации (акцент) */
+        .btn-reg {
+            border-color: #88ffaa;
+            background: rgba(30, 80, 30, 0.4);
+            box-shadow: 0 0 12px #3eff6e;
+        }
+
+        /* Размещение кнопок в ряду или колонке на мобилках */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        /* Мигающий текст дополнительной информации */
+        .system-alert {
+            font-size: 0.7rem;
+            margin-top: 28px;
+            color: #7aa97a;
+            border-top: 1px dashed #47ff7e;
+            padding-top: 16px;
+            letter-spacing: 1px;
+            animation: flicker 2.5s infinite;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 0.5;
+                text-shadow: none;
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 2px #1eff6e;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Эффект сканирующей линии (как в старых мониторах) */
+        .scan-line-red {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 50, 100, 0.6);
+            box-shadow: 0 0 15px #ff3366;
+            z-index: 30;
+            animation: scanVertical 5s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanVertical {
+            0% {
+                top: -5%;
+            }
+
+            50% {
+                top: 105%;
+            }
+
+            100% {
+                top: -5%;
+            }
+        }
+
+        /* маленькая панель состояния */
+        .status-bar {
+            position: fixed;
+            bottom: 15px;
+            right: 20px;
+            font-size: 11px;
+            background: #021102cc;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+            color: #44dd77;
+            z-index: 25;
+            backdrop-filter: blur(4px);
+            border: 0.5px solid #5aff7a;
+            letter-spacing: 1px;
+        }
+
+        /* адаптация */
+        @media (max-width: 550px) {
+            .error-container {
+                padding: 1.8rem 1.2rem;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+                letter-spacing: 1px;
+            }
+
+            .matrix-btn {
+                min-width: 160px;
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+
+            .error-message {
+                font-size: 0.9rem;
+            }
+
+            .error-icon {
+                font-size: 3rem;
+            }
+        }
+
+        /* кастомный курсор (терминал) */
+        body {
+            cursor: default;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* глитч-анимация для контейнера время от времени */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,255,0,0.02) 0px, rgba(255,0,0,0.02) 2px, transparent 3px, transparent 8px);
+            pointer-events: none;
+            z-index: 15;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrixCanvas"></canvas>
+    <div class="matrix-bg"></div>
+    <div class="scan-line-red"></div>
+    <div class="glitch-overlay"></div>
+    <div class="status-bar">[ СБОЙ СИНХРОНИЗАЦИИ ] :: ОШИБКА 0x00F1</div>
+
+    <div class="error-container">
+        <div class="error-icon">⚠️ [ X ] ⚠️</div>
+        <h1>Аккаунт не найден!</h1>
+
+        <div class="error-message">
+            &gt; <span>МАТРИЦА ОТВЕРГАЕТ ДОСТУП</span><br>
+            &gt; Пользователь с такими данными <span>не существует</span> в главной базе Сети.<br>
+            &gt; Проверьте логин / пароль или создайте новый нейро-интерфейс.
+        </div>
+
+        <div class="button-group">
+            <form method="GET" action="/" style="display: inline;">
+                <button type="submit" class="matrix-btn btn-home">⌂ НАЗАД В МЕНЮ ⌂</button>
+            </form>
+            <form method="GET" action="/reg" style="display: inline;">
+                <button type="submit" class="matrix-btn btn-reg">⎚ РЕГИСТРАЦИЯ ⎚</button>
+            </form>
+        </div>
+
+        <div class="system-alert">
+            [ СИСТЕМА РЕКОМЕНДУЕТ: ПРОВЕРИТЬ ПОДКЛЮЧЕНИЕ К ЯДРУ ]
+        </div>
+    </div>
+</body>
+</html>

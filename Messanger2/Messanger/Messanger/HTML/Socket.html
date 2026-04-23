@@ -1,0 +1,42 @@
+﻿
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <title>Соединение</title>
+    <style>
+        .placehold::placeholder{
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="col text-dark">
+            <p>Работа сокета</p>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col text-center">
+                <textarea class="placehold form-control m-5 rows-5 h-100 text-white bg-dark" id="write_message" placeholder="Введите сообщение"></textarea>
+            </div>
+        </div>
+        <div class="row m-5">
+            <div class="col text-center">
+                <button id="send_message" class="p-2 m-3 btn btn-dark">Отправить</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-center">
+                <textarea readonly class="placehold form-control m-5 rows-5 h-100 text-white bg-dark" id="all_message" placeholder="Написанные сообщения"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/WebSocketJs.js"></script>
+</body>
+</html>
