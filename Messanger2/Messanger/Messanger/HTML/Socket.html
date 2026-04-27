@@ -1,6 +1,4 @@
-﻿
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
@@ -35,6 +33,13 @@
                 <textarea readonly class="placehold form-control m-5 rows-5 h-100 text-white bg-dark" id="all_message" placeholder="Написанные сообщения"></textarea>
             </div>
         </div>
+        <form method="post" action="/Save">
+            <div class="row m-5">
+                <div class="col text-center">
+                    <button id="close" class="p-2 m-3 btn btn-dark">Назад</button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <script src="/js/WebSocketJs.js"></script>

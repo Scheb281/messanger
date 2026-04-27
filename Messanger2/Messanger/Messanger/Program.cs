@@ -1,4 +1,5 @@
 using Messanger.Classes;
+using Messanger.Controllers;
 using Messanger.Tabels;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Hosting.Builder;
@@ -6,9 +7,12 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi;
 using Npgsql;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -38,7 +42,8 @@ var sockets = new ConcurrentDictionary<Guid, WebSocket>();
 app.MapRazorPages();
 
 User? User = null;
-string Nik;
+string Nik, Messages = string.Empty;
+int Index = -1;
 
 using (var scope = app.Services.CreateScope())
 {
@@ -63,12 +68,26 @@ async Task HandleWebSocketConnection(WebSocket webSocket)
     var buffer = new byte[1024 * 4];
     while (webSocket.State == WebSocketState.Open)
     {
-        var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-        if (result.MessageType == WebSocketMessageType.Close) break;
-
-        foreach (var client in sockets.Values.Where(s => s.State == WebSocketState.Open))
+        try
         {
-            await client.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, true, CancellationToken.None);
+            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            if (result.MessageType == WebSocketMessageType.Close)
+            {
+                Reset();
+                break;
+            }
+
+            foreach (var client in sockets.Values.Where(s => s.State == WebSocketState.Open))
+            {
+                string message = Encoding.UTF8.GetString(buffer);
+                message = message.Replace("\0", string.Empty);
+                Messages += message + '\n';
+                await client.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, true, CancellationToken.None);
+            }
+        }
+        catch
+        {
+            Reset();
         }
     }
 }
@@ -134,6 +153,7 @@ app.MapPost("/reg", async (HttpContext context, Db db) =>
     string login = form["login"];
     string password = form["password"];
     string nik = form["nik"];
+    string[] messages = { "New" };
 
     string html = File.ReadAllText($"HTML\\RegS.html");
 
@@ -148,7 +168,8 @@ app.MapPost("/reg", async (HttpContext context, Db db) =>
     {
         Login = login,
         Password = GetHash(password),
-        Nik = nik
+        Nik = nik,
+        Messages = messages
     };
 
     await db.Users.AddAsync(user);
@@ -223,41 +244,15 @@ app.MapGet("/chats", () =>
 
 app.MapPost("/DelContact/{name}", async (string name, HttpContext context, Db db) =>
 {
-    bool del = false;
-    string NewChat = string.Empty;
-    string[] lines = User.Chats.Split('\n');
-    var user = await db.Users.FirstOrDefaultAsync(u => u.Login == User.Login && u.Password == User.Password);
-    foreach (string l in lines)
-    {
-        if (l != "")
-        {
-            if (del && l[0] == '!')
-            {
-                del = false;
-            }
-            if (!del)
-            {
-                if (l[0] == '!')
-                {
-                    if (l.Remove(0, 1) == name)
-                    {
-                        del = true;
-                    }
-                    else
-                    {
-                        NewChat += l + '\n';
-                    }
-                }
-                else
-                {
-                    NewChat += l;
-                }
-            }
-        }
-    }
-    user.Chats = NewChat;
-    SetUser(user);
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Nik == name);
+    var user2 = await db.Users.FirstOrDefaultAsync(u => u.Nik == User.Nik);
+
+    await DelContact(user, db, User.Nik);
+    await DelContact(user2, db, name);
+
+    SetUser(user2);
     await db.SaveChangesAsync();
+    Reset();
     context.Response.Redirect("/chats");
 }); 
 
@@ -275,6 +270,7 @@ app.MapPost("/AddContact", async (HttpContext context, Db db) =>
     string nik = form["nik"];
 
     var user = await db.Users.FirstOrDefaultAsync(u => u.Nik == nik);
+    var user2 = await db.Users.FirstOrDefaultAsync(u => u.Nik == User.Nik);
 
     if (user is null)
     {
@@ -289,7 +285,7 @@ app.MapPost("/AddContact", async (HttpContext context, Db db) =>
         {
             if (l[0] == '!')
             {
-                if (l.Remove(0,1) == nik)
+                if (l.Remove(0, 1) == nik)
                 {
                     html = File.ReadAllText("HTML\\AddError2.html");
                     return Results.Content(html, "text/html; charset=utf-8");
@@ -298,54 +294,56 @@ app.MapPost("/AddContact", async (HttpContext context, Db db) =>
         }
     }
 
-    user = await db.Users.FirstOrDefaultAsync(u => u.Login == User.Login && u.Password == User.Password);
-    user.Chats += $"!{nik}\n";
-    SetUser(user);
+    await AddContact(user, db, User.Nik);
+    await AddContact(user2, db, nik);
+
+    SetUser(user2);
     await db.SaveChangesAsync();
 
     return Results.Content(html, "text/html; charset=utf-8");
 });
 
+app.MapPost("/Save/{name}", async (string name, HttpContext context, Db db) =>
+{
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Nik == name);
+    var user2 = await db.Users.FirstOrDefaultAsync(u => u.Nik == User.Nik);
+
+    await SaveMessages(user, db, User.Nik);
+    await SaveMessages(user2, db, name);
+
+    SetUser(user2);
+    await db.SaveChangesAsync();
+
+    Reset();
+
+    context.Response.Redirect("/Chats");
+});
+
 app.MapGet("/Chat/{name}", async (string name, HttpContext context, Db db) => 
 {
+    Messages = string.Empty;
+    Reset();
     Nik = name;
     var html = string.Empty;
     string line, messages = string.Empty;
     string[] chat = User.Chats.Split("\n");
 
-    if (User.Chats != "")
+    GetIndex();
+
+    using (StreamReader sr = new StreamReader($"HTML\\Socket.html"))
     {
-        foreach(string l in chat)
+        while ((line = sr.ReadLine()) != null)
         {
-            if (l != "")
+            if (line.Trim() == "<form method=\"post\" action=\"/Save\">")
             {
-                if (l[0] == '!' && l.Remove(0, 1) == name)
-                {
-                    foreach (string s in chat)
-                    {
-                        if (s == l)
-                        {
-                            messages += s + '\n';
-                        }
-                    }
-                    using (StreamReader sr = new StreamReader($"HTML\\Socket.html"))
-                    {
-                        while ((line = sr.ReadLine()) != null)
-                        {
-                            if (line.Trim() == "<textarea readonly class=\"placehold form-control m-5 rows-5 h-100 text-white bg-dark\" id=\"all_message\" placeholder=\"Написанные сообщения\"></textarea>")
-                            {
-                                line = $"<textarea readonly class=\"placehold form-control m-5 rows-5 h-100 text-white bg-dark\" id=\"all_message\" placeholder=\"Написанные сообщения\">{messages}</textarea>";
-                            }
-                            html += line;
-                        }
-                    }
-                }
+                line = $"<form method=\"post\" action=\"/Save/{name}\">";
             }
+            if (line.Trim() == "<textarea readonly class=\"placehold form-control m-5 rows-5 h-100 text-white bg-dark\" id=\"all_message\" placeholder=\"Написанные сообщения\"></textarea>")
+            {
+                line = $"<textarea readonly class=\"placehold form-control m-5 rows-5 h-100 text-white bg-dark\" id=\"all_message\" placeholder=\"Написанные сообщения\">{User.Messages[Index]}</textarea>";
+            }
+            html += line;
         }
-    }
-    if (messages == string.Empty)
-    {
-        html = File.ReadAllText($"HTML\\Reg.html");
     }
 
     return Results.Content(html, "text/html; charset=utf-8");
@@ -389,7 +387,8 @@ static async Task CreateTables(Db db)
             "Nik" text NOT NULL,
             "Login" text NOT NULL,
             "Password" text NOT NULL,
-            "Chats" NVARCHAR(MAX)
+            "Chats" NVARCHAR(MAX),
+            "Messages" TEXT[] NULL
         );
         """);
 }
@@ -507,5 +506,103 @@ async Task AddMessage(string m, Db db)
     await db.SaveChangesAsync();
 }
 
+void GetIndex()
+{
+    if(User.Chats != "")
+    {
+        string[] lines = User.Chats.Split("\n");
+        foreach (string l in lines)
+        {
+            Index++;
+            if (l.Remove(0, 1) == Nik)
+            {
+                break;
+            }
+        }
+    }
+}
+
+int GetIndex2(User u, string name)
+{
+    int index = -1;
+    if (u.Chats != "")
+    {
+        string[] lines = u.Chats.Split("\n");
+        foreach (string l in lines)
+        {
+            index++;
+            if (l.Remove(0, 1) == name)
+            {
+                return index;
+            }
+        }
+    }
+    return -1;
+}
+
+async Task DelChat(User user, Db db, string nik)
+{
+    int index = GetIndex2(user, nik);
+
+    if (user.Messages.Length == 1)
+    {
+        user.Messages[0] = "New";
+    }
+    else
+    {
+        user.Messages = user.Messages.Where(u => u != user.Messages[index]).ToArray();
+    }
+}
+
+void Reset()
+{
+    Nik = string.Empty;
+    Index = -1;
+}
+
+async Task AddContact(User user, Db db, string nik)
+{
+    user.Chats += $"!{nik}" + '\n';
+
+    try
+    {
+        if (user.Messages[0] == "New")
+        {
+            user.Messages[0] = "Начните общение\n";
+        }
+        else
+        {
+            user.Messages = user.Messages.Append("Начните общение\n").ToArray();
+        }
+    }
+    catch (IndexOutOfRangeException)
+    {
+        user.Messages = user.Messages.Append("Начните общение\n").ToArray();
+    }
+}
+
+async Task DelContact(User user, Db db, string name)
+{
+    await DelChat(user, db, name);
+    string NewChat = string.Empty;
+    string[] lines = user.Chats.Split('\n');
+    foreach (string l in lines)
+    {
+        if (l != "")
+        {
+            if (l.Remove(0, 1) != name)
+            {
+                NewChat += l + '\n';
+            }
+        }
+    }
+    user.Chats = NewChat;
+}
+
+async Task SaveMessages(User user, Db db, string name)
+{
+    int index = GetIndex2(user, name);
+    user.Messages[index] += Messages;
+}
 
 

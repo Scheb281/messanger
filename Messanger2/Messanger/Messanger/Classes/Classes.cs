@@ -7,5 +7,6 @@
         public string Login { get; set; }
         public string Password { get; set; }
         public string Chats { get; set; } = string.Empty;
+        public string[] Messages { get; set; }
     }
 }
